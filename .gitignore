@@ -1,0 +1,55 @@
+# ── Secrets — NEVER commit these ─────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+credentials/
+*.pem
+*.key
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+ENV/
+
+# ── Testing and coverage ──────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ── Type checking ─────────────────────────────────────────────────────────────
+.mypy_cache/
+
+# ── IDE and editor ────────────────────────────────────────────────────────────
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# ── Docker ────────────────────────────────────────────────────────────────────
+*.override.yml
+
+# ── Local databases ───────────────────────────────────────────────────────────
+*.db
+*.sqlite3
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Evaluation reports (generated — not committed) ────────────────────────────
+evaluation/reports/
+
+# ── ChromaDB local data ───────────────────────────────────────────────────────
+chroma_data/
