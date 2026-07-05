@@ -1,0 +1,75 @@
+# docker-compose.yml
+#
+# Infrastructure services for local development.
+# Starts ChromaDB, the mock Policy CRM, and PostgreSQL.
+#
+# The ResolveAI API runs locally via uvicorn for fast development iteration.
+#
+# Usage:
+#   docker compose up -d          # start all services in background
+#   docker compose down           # stop all services
+#   docker compose logs -f        # follow logs from all services
+#   docker compose ps             # check service status
+
+services:
+
+  # ── ChromaDB — vector store for RAG knowledge base ───────────────────────────
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: resolveai-chromadb
+    ports:
+      - "8001:8000"              # host:8001 → container:8000
+    volumes:
+      - chroma_data:/chroma/chroma   # persist embeddings across restarts
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/8000 && echo -e 'GET /api/v2/heartbeat HTTP/1.0\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Mock Policy CRM — simulates insurance CRM REST API ───────────────────────
+  mock-crm:
+    build:
+      context: ./src/mocks/policy_crm_service
+      dockerfile: Dockerfile
+    container_name: resolveai-mock-crm
+    ports:
+      - "8002:8002"
+    environment:
+      - MOCK_CRM_API_KEY=mock-crm-secret-key
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── PostgreSQL — conversation logs and analytics ──────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: resolveai-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: resolveai
+      POSTGRES_USER: resolveai
+      POSTGRES_PASSWORD: changeme-in-prod
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U resolveai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+# Data persists across container restarts.
+# To wipe all data: docker compose down -v
+volumes:
+  chroma_data:
+  postgres_data:
