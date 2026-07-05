@@ -45,8 +45,8 @@ def _build_llm_client() -> openai.AsyncOpenAI:
     """Build the LLM client based on the configured provider."""
     if settings.llm_provider == "ollama":
         return openai.AsyncOpenAI(
-            base_url=settings.ollama_base_url,
-            api_key="ollama",          # Ollama ignores the key but requires one
+            base_url=f"{settings.ollama_base_url}/v1",
+            api_key="ollama",
         )
     elif settings.llm_provider == "anthropic":
         return openai.AsyncOpenAI(
