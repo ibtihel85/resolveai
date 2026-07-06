@@ -20,7 +20,11 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from fastapi import APIRouter, HTTPException
+from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException
+from src.db.models import get_db
+from src.analytics.logger import ConversationLogger
+
 from pydantic import BaseModel, Field
 
 from src.agent.core import ConversationManager
@@ -35,7 +39,7 @@ router = APIRouter()
 # In-memory dict: conversation_id → ConversationManager instance.
 #
 # Limitation: sessions are lost on server restart and not shared
-# across multiple server instances. Sufficient for Week 1 development.
+# across multiple server instances.
 # Production solution: store sessions in Redis with TTL expiry.
 _sessions: dict[str, ConversationManager] = {}
 
@@ -120,7 +124,9 @@ class SessionStateResponse(BaseModel):
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/message", response_model=ChatResponse)
-async def chat_message(req: ChatRequest) -> ChatResponse:
+async def chat_message(req: ChatRequest,
+                        db: Session = Depends(get_db),
+                        ) -> ChatResponse:
     """
     Send a message to the ResolveAI agent and receive a response.
 
@@ -150,6 +156,16 @@ async def chat_message(req: ChatRequest) -> ChatResponse:
 
     # ── Run the agent turn ────────────────────────────────────────────────────
     result = await manager.handle_turn(req.message)
+    # Log the turn to PostgreSQL
+    conv_logger = ConversationLogger(db)
+    await conv_logger.log_turn(
+        conversation_id=conv_id,
+        channel="chat",
+        case_state=manager.case_state,
+        user_message=req.message,
+        result=result,
+        turn_index=manager.memory.turn_count(),
+    )
 
     # ── Clean up escalated conversations ──────────────────────────────────────
     # Once escalated, the agent hands off to a human.
