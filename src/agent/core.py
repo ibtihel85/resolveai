@@ -20,6 +20,7 @@ The ReAct loop (Reasoning + Acting):
 
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from dataclasses import dataclass, field
@@ -27,6 +28,7 @@ from typing import Any
 
 import openai
 
+from src.agent.guardrails import GuardrailsLayer
 from src.agent.memory import AgentMemory, CaseState
 from src.agent.prompts import get_system_prompt
 from src.agent.tools import TOOL_DEFINITIONS, dispatch
@@ -76,6 +78,7 @@ class TurnResult:
     is_fallback: bool = False
     is_escalation: bool = False
     escalation_reason: str | None = None
+    guardrail_triggered: str | None = None
     input_tokens: int = 0
     output_tokens: int = 0
     latency_ms: int = 0
@@ -83,19 +86,6 @@ class TurnResult:
 
 # ── Canned responses ──────────────────────────────────────────────────────────
 # Used when guardrails block a request before the LLM is called.
-# Defined here so they're easy to find and update.
-
-_BLOCK_RESPONSES = {
-    "prompt_injection": (
-        "I'm not able to process that request. "
-        "Is there something I can help you with regarding your Meridian Insurance policy?"
-    ),
-    "out_of_scope": (
-        "That's outside what I can help with here. "
-        "I specialise in policy questions, claims, billing, and appointments. "
-        "Can I help you with any of those?"
-    ),
-}
 
 _ESCALATION_RESPONSES = {
     "customer_requested_human": (
@@ -145,6 +135,7 @@ class ConversationManager:
         )
         self.memory = AgentMemory(case_state)
         self._retry_count: int = 0
+        self._guardrails = GuardrailsLayer()
 
     @property
     def case_state(self) -> CaseState:
@@ -155,14 +146,8 @@ class ConversationManager:
         """
         Process one user turn and return a TurnResult.
 
-        This is the main entry point called by the API layer (chat.py).
-        It runs the full ReAct loop and returns whatever the agent produces.
-
-        Args:
-            user_message: the raw text from the user
-
-        Returns:
-            TurnResult with response text, tool calls made, and metrics.
+        Runs guardrail checks before the agent loop.
+        Blocked inputs return immediately without calling the LLM.
         """
         t0 = time.monotonic()
 
@@ -173,13 +158,54 @@ class ConversationManager:
             message_preview=user_message[:60],
         )
 
-        # Add user message to memory before the LLM call
+        # ── Input guardrail check ─────────────────────────────────────────────
+        guardrail_result = self._guardrails.check_input(user_message)
+
+        if not guardrail_result.passed:
+            log.info(
+                "agent.turn_blocked",
+                conversation_id=self.conversation_id,
+                rule=guardrail_result.triggered_rule,
+            )
+            return TurnResult(
+                response_text=guardrail_result.block_reason or "I'm not able to help with that.",
+                is_fallback=True,
+                guardrail_triggered=guardrail_result.triggered_rule,
+                latency_ms=int((time.monotonic() - t0) * 1000),
+            )
+
+        # ── Escalation pre-check ──────────────────────────────────────────────
+        should_esc, esc_reason = self._guardrails.should_escalate(
+            text=user_message,
+            retrieval_score=None,
+            retry_count=self._retry_count,
+        )
+
+        if should_esc:
+            log.info(
+                "agent.escalation_triggered",
+                conversation_id=self.conversation_id,
+                reason=esc_reason,
+            )
+            self.case_state.escalation_flag = True
+            self.case_state.escalation_reason = esc_reason
+            return TurnResult(
+                response_text=_ESCALATION_RESPONSES.get(
+                    esc_reason or "",
+                    "Let me connect you with a team member right away.",
+                ),
+                is_escalation=True,
+                escalation_reason=esc_reason,
+                latency_ms=int((time.monotonic() - t0) * 1000),
+            )
+
+        # ── Add user message to memory ────────────────────────────────────────
         self.memory.add_user(user_message)
 
-        # Run the ReAct loop
+        # ── Run the ReAct loop ────────────────────────────────────────────────
         result = await self._react_loop(t0)
 
-        # Add assistant response to memory for next turn's context
+        # ── Add assistant response to memory ─────────────────────────────────
         self.memory.add_assistant(result.response_text)
 
         log.info(
@@ -201,22 +227,14 @@ class ConversationManager:
         Calls the LLM, dispatches tool calls if requested,
         feeds results back, repeats until the LLM returns text
         or we hit the maximum number of rounds.
-
-        Args:
-            t0: start time from time.monotonic() for latency tracking
-
-        Returns:
-            TurnResult with the final response and all metrics.
         """
         tool_calls_log: list[dict[str, Any]] = []
         total_input_tokens = 0
         total_output_tokens = 0
         max_rounds = 5
 
-        # Build current message history for the LLM
         messages = self.memory.get_messages()
 
-        # Build system prompt with current case context injected
         system_prompt = get_system_prompt(
             version=settings.agent_prompt_version,
             case_context=self.case_state.to_context_string(),
@@ -238,12 +256,11 @@ class ConversationManager:
                     *messages,
                 ],
                 tools=TOOL_DEFINITIONS,
-                tool_choice="auto",        # LLM decides whether to use a tool
+                tool_choice="auto",
                 max_tokens=settings.agent_max_tokens,
                 temperature=settings.agent_temperature,
             )
 
-            # Track token usage for cost/analytics logging
             if response.usage:
                 total_input_tokens += response.usage.prompt_tokens
                 total_output_tokens += response.usage.completion_tokens
@@ -253,7 +270,7 @@ class ConversationManager:
             # ── Case A: LLM returned text — we are done ───────────────────────
             if choice.finish_reason == "stop":
                 response_text = choice.message.content or ""
-                self._retry_count = 0   # reset on successful turn
+                self._retry_count = 0
 
                 return TurnResult(
                     response_text=response_text,
@@ -265,7 +282,6 @@ class ConversationManager:
 
             # ── Case B: LLM wants to call tools ──────────────────────────────
             if choice.finish_reason == "tool_calls" and choice.message.tool_calls:
-                # Add the assistant's tool-call message to the conversation
                 messages = messages + [
                     {
                         "role": "assistant",
@@ -284,8 +300,6 @@ class ConversationManager:
                     }
                 ]
 
-                # Dispatch each tool call and collect results
-                import json
                 tool_result_messages = []
 
                 for tool_call in choice.message.tool_calls:
@@ -311,6 +325,30 @@ class ConversationManager:
                         self.case_state.customer_id = tool_result.get("customer_id")
                         self.case_state.customer_name = tool_result.get("customer_name")
 
+                    # Check retrieval confidence after KB search
+                    if tool_name == "search_knowledge_base":
+                        best_score = tool_result.get("best_score")
+                        should_esc, esc_reason = self._guardrails.should_escalate(
+                            text="",
+                            retrieval_score=best_score,
+                            retry_count=self._retry_count,
+                        )
+                        if should_esc:
+                            self.case_state.escalation_flag = True
+                            self.case_state.escalation_reason = esc_reason
+                            return TurnResult(
+                                response_text=_ESCALATION_RESPONSES.get(
+                                    esc_reason or "",
+                                    "Let me connect you with a team member right away.",
+                                ),
+                                tool_calls=tool_calls_log,
+                                is_escalation=True,
+                                escalation_reason=esc_reason,
+                                input_tokens=total_input_tokens,
+                                output_tokens=total_output_tokens,
+                                latency_ms=int((time.monotonic() - t0) * 1000),
+                            )
+
                     tool_calls_log.append({
                         "name": tool_name,
                         "input": tool_input,
@@ -324,9 +362,8 @@ class ConversationManager:
                         "content": json.dumps(tool_result),
                     })
 
-                # Add tool results to messages — LLM reads these next round
                 messages = messages + tool_result_messages
-                continue   # go back to top of loop — call LLM again
+                continue
 
             # ── Case C: unexpected finish reason ─────────────────────────────
             log.warning(
