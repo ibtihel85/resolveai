@@ -319,6 +319,17 @@ class ConversationManager:
                     tool_result = await dispatch(tool_name, tool_input)
                     tc_ms = int((time.monotonic() - tc_start) * 1000)
 
+                    if "error" in tool_result:
+                        self._retry_count += 1
+                        log.warning(
+                            "agent.tool_error",
+                            tool=tool_name,
+                            error=tool_result["error"],
+                            retry_count=self._retry_count,
+                        )
+                    else:
+                        self._retry_count = 0 
+
                     # Update case state from policy lookups
                     if tool_name == "lookup_policy" and "policy_id" in tool_result:
                         self.case_state.policy_id = tool_result.get("policy_id")

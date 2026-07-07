@@ -85,7 +85,7 @@ _ADVICE_RE = re.compile(
 # ── Escalation patterns ───────────────────────────────────────────────────────
 _HUMAN_REQUEST_RE = re.compile(
     r"\b(speak|talk|connect|transfer|escalate)\s+(to|with)\s+"
-    r"(a\s+)?(human|person|agent|representative|someone)\b",
+    r"(a\s+)?(real\s+)?(human|person|agent|representative|someone)\b",
     re.IGNORECASE,
 )
 

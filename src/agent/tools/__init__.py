@@ -27,6 +27,7 @@ import src.agent.tools.knowledge_base_tool as knowledge_base_tool
 import src.agent.tools.policy_crm_tool as policy_crm_tool
 import src.agent.tools.slack_tool as slack_tool
 import src.agent.tools.zendesk_tool as zendesk_tool
+import src.agent.tools.claims_tool as claims_tool
 from src.logger import get_logger
 
 log = get_logger(__name__)
@@ -36,6 +37,7 @@ log = get_logger(__name__)
 # Order matters slightly — put higher-priority tools first.
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
     policy_crm_tool.TOOL_DEFINITION,
+    claims_tool.TOOL_DEFINITION, 
     knowledge_base_tool.TOOL_DEFINITION,
     zendesk_tool.TOOL_DEFINITION,
     calendar_tool.TOOL_DEFINITION,
@@ -45,6 +47,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
 # ── Handler registry ──────────────────────────────────────────────────────────
 _HANDLERS: dict[str, Any] = {
     "lookup_policy": policy_crm_tool.run,
+    "get_claim_status": claims_tool.run,
     "search_knowledge_base": knowledge_base_tool.run,
     "create_ticket": zendesk_tool.run,
     "book_callback": calendar_tool.run,
