@@ -7,9 +7,11 @@ description: >
   correct escalation tool sequence (create_ticket then notify_slack_escalation),
   voice-channel response style guidance, and callback booking instructions.
   Promoted after evaluation showed +11% task success vs v1.
-eval_task_success_rate: 0.82
-eval_hallucination_rate: 0.03
-eval_quality_score: 4.1
+eval_task_success_rate: 0.8667
+eval_escalation_accuracy: 0.6667
+eval_keyword_match_rate: 0.70
+eval_tool_accuracy_rate: 0.8182
+eval_run_at: 2026-07-07
 ---
 
 # System prompt — Aria, Meridian Insurance Support Agent (v2)
