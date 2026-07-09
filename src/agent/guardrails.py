@@ -60,7 +60,8 @@ _OUT_OF_SCOPE_PATTERNS = [
     r"\b(recipe|cook(ing)?|restaurant)\b",
     r"\b(weather|forecast|temperature)\b",
     r"\b(sport(s)?|football|soccer|tennis)\b",
-    r"\b(movie|film|series|netflix)\b",
+    r"\b(movies?|films?|cinema|series|netflix|tv\s+show)\b",
+    r"\bplaying\s+this\s+weekend\b",
     r"\b(stock\s+price|crypto|bitcoin|invest(ment)?)\b",
     r"\bwrite\s+(me\s+)?(a\s+)?(poem|song|story|essay|code)\b",
     r"\btranslate\b",
@@ -84,8 +85,8 @@ _ADVICE_RE = re.compile(
 
 # ── Escalation patterns ───────────────────────────────────────────────────────
 _HUMAN_REQUEST_RE = re.compile(
-    r"\b(speak|talk|connect|transfer|escalate)\s+(to|with)\s+"
-    r"(a\s+)?(real\s+)?(human|person|agent|representative|someone)\b",
+    r"\b(speak|talk|connect|transfer|escalate)\s+(\w+\s+)?(to|with)\s+"
+    r"(an?\s+)?(real\s+)?(human|person|agent|representative|someone)\b",
     re.IGNORECASE,
 )
 
