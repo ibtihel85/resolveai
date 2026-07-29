@@ -65,7 +65,20 @@ dependencies = [
     "python-dotenv>=1.0.1",            # loads .env file into os.environ at startup
     "jinja2>=3.1.4",                   # injects case context into prompt templates
     "tiktoken>=0.7.0",                 # counts tokens before sending to LLM
-]
+
+    # ── Voice ─────────────────────────────────────────────────────────────────────
+    "openai-whisper>=20231117",  # local Whisper STT — free
+    "elevenlabs>=1.2.0",        # TTS with SSML support
+    "twilio>=9.2.0",            # voice channel webhooks
+
+    # ── Analytics dashboard ───────────────────────────────────────────────────────
+    "streamlit>=1.35.0",
+    "plotly>=5.22.0",
+    "pandas>=2.2.0",
+
+    # ── Monitoring ────────────────────────────────────────────────────────────────
+    "prometheus-client>=0.20.0",
+    ]
 
 [project.optional-dependencies]
 # ONLY installed when a developer runs: pip install -e ".[dev]"
