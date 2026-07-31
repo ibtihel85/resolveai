@@ -21,9 +21,6 @@ Voice personas:
 from __future__ import annotations
 
 import asyncio
-import io
-from functools import lru_cache
-from typing import Any
 
 from src.config import settings
 from src.logger import get_logger
@@ -154,8 +151,9 @@ def _pyttsx3_synthesize_sync(text: str) -> bytes:
     Synchronous pyttsx3 synthesis — runs in thread pool.
     Saves audio to a temp file and reads it back as bytes.
     """
-    import tempfile
     import os
+    import tempfile
+
     import pyttsx3
 
     engine = pyttsx3.init()

@@ -21,7 +21,6 @@ import pytest
 
 from src.agent.guardrails import GuardrailResult, GuardrailsLayer
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture(scope="module")

@@ -216,7 +216,7 @@ async def run_evaluation(
                 scenarios.append(json.loads(line))
 
     print(f"\n{'='*65}")
-    print(f"  ResolveAI Evaluation Harness")
+    print("  ResolveAI Evaluation Harness")
     print(f"  Dataset:        {dataset_name}")
     print(f"  Prompt version: {prompt_version}")
     print(f"  Scenarios:      {len(scenarios)}")

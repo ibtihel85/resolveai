@@ -19,7 +19,6 @@ import pytest
 
 from src.agent.memory import AgentMemory, CaseState
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 # Fixtures are reusable setup functions shared across tests.
 # pytest injects them automatically by parameter name.

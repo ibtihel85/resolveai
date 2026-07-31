@@ -20,15 +20,14 @@ from __future__ import annotations
 import uuid
 from typing import Any
 
-from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException
-from src.db.models import get_db
-from src.analytics.logger import ConversationLogger
-
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
 from src.agent.core import ConversationManager
+from src.analytics.logger import ConversationLogger
 from src.config import settings
+from src.db.models import get_db
 from src.logger import get_logger
 
 log = get_logger(__name__)

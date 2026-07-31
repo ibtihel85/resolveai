@@ -23,11 +23,11 @@ from __future__ import annotations
 from typing import Any
 
 import src.agent.tools.calendar_tool as calendar_tool
+import src.agent.tools.claims_tool as claims_tool
 import src.agent.tools.knowledge_base_tool as knowledge_base_tool
 import src.agent.tools.policy_crm_tool as policy_crm_tool
 import src.agent.tools.slack_tool as slack_tool
 import src.agent.tools.zendesk_tool as zendesk_tool
-import src.agent.tools.claims_tool as claims_tool
 from src.logger import get_logger
 
 log = get_logger(__name__)

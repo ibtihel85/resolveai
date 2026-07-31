@@ -16,15 +16,15 @@ All endpoint logic lives in src/api/routes/*.py.
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.routes import chat, voice
 from src.config import settings
 from src.logger import configure_logging, get_logger
-from src.api.routes import chat, voice
 
 log = get_logger(__name__)
 

@@ -25,20 +25,13 @@ TwiML responses:
 
 from __future__ import annotations
 
-import uuid
 from typing import Any
-from urllib.parse import urljoin
 
 from fastapi import APIRouter, Form, Request, Response
-from fastapi.responses import Response as FastAPIResponse
 
 from src.agent.core import ConversationManager
-from src.analytics.logger import ConversationLogger
 from src.config import settings
-from src.db.models import get_db
 from src.logger import get_logger
-from src.voice.stt import transcribe_with_fallback
-from src.voice.tts import synthesize
 
 log = get_logger(__name__)
 

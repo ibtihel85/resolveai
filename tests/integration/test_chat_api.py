@@ -24,7 +24,6 @@ from httpx import ASGITransport, AsyncClient
 from src.api.main import app
 from src.api.routes.chat import _sessions
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 @pytest.fixture(autouse=True)

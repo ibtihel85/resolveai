@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -35,6 +34,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from src.config import settings
+
 
 # ── Database engine ───────────────────────────────────────────────────────────
 def _create_engine():

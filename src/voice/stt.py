@@ -20,9 +20,8 @@ Model sizes (tradeoff: accuracy vs speed vs disk):
 
 from __future__ import annotations
 
-import io
-import tempfile
 import os
+import tempfile
 from functools import lru_cache
 from typing import Any
 
