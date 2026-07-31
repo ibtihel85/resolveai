@@ -132,6 +132,7 @@ async def run(query: str, top_k: int = 5) -> dict[str, Any]:
             results     (list)   — list of document dicts with text and metadata
             error       (str)    — only present if something went wrong
     """
+    top_k = int(top_k)
     top_k = min(top_k, 10)   # cap to prevent abuse
 
     try:

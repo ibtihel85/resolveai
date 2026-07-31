@@ -98,9 +98,9 @@ class ConversationLogger:
 
             # Update aggregated metrics
             conv.total_turns = turn_index
-            conv.total_tokens += result.input_tokens + result.output_tokens
-            conv.total_cost_usd += cost
-            conv.total_latency_ms += result.latency_ms
+            conv.total_tokens = (conv.total_tokens or 0) + (result.input_tokens or 0) + (result.output_tokens or 0)
+            conv.total_cost_usd = (conv.total_cost_usd or 0.0) + cost
+            conv.total_latency_ms = (conv.total_latency_ms or 0) + (result.latency_ms or 0)
 
             # Update case state fields that may have been resolved this turn
             if case_state.customer_id:
