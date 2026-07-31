@@ -37,14 +37,18 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sess
 from src.config import settings
 
 # ── Database engine ───────────────────────────────────────────────────────────
-# pool_pre_ping=True verifies connections before use — handles dropped
-# connections after PostgreSQL restarts without crashing the application.
-engine = create_engine(
-    settings.database_url,
-    pool_pre_ping=True,
-    pool_size=10,
-    max_overflow=20,
-)
+def _create_engine():
+    """Create database engine — SQLite for tests, PostgreSQL for production."""
+    if settings.database_url.startswith("sqlite"):
+        return create_engine(settings.database_url)
+    return create_engine(
+        settings.database_url,
+        pool_pre_ping=True,
+        pool_size=10,
+        max_overflow=20,
+    )
+
+engine = _create_engine()
 
 # Session factory — call SessionLocal() to get a database session
 SessionLocal = sessionmaker(
