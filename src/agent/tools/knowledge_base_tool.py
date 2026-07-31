@@ -159,7 +159,7 @@ async def run(query: str, top_k: int = 5) -> dict[str, Any]:
         # ChromaDB returns cosine DISTANCE (0=identical, 2=opposite)
         # Convert to SIMILARITY (1=identical, 0=no match) for readability
         formatted = []
-        for doc, meta, distance in zip(documents, metadatas, distances):
+        for doc, meta, distance in zip(documents, metadatas, distances, strict=False):
             similarity = 1 - distance
             formatted.append({
                 "doc_id": meta.get("doc_id", "unknown"),

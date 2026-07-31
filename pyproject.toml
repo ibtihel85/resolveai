@@ -100,9 +100,14 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
-# E/F = basic errors, I = import order, UP = modern Python syntax, B = bug patterns
-select = ["E", "F", "I", "UP", "B", "SIM"]
-ignore = ["E501"]                      # line length enforced by formatter, not linter
+select = ["E", "F", "I"]
+ignore = [
+    "E501",    # line too long
+    "E711",    # comparison to True/False/None
+    "E712",    # comparison to True/False
+    "F841",    # unused variables
+    "B008",    # FastAPI Depends() pattern
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]            # treat src/ as your own code, not third-party

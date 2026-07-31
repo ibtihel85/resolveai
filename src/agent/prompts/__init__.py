@@ -16,7 +16,6 @@ from pathlib import Path
 
 from jinja2 import Template
 
-from src.config import settings
 from src.logger import get_logger
 
 log = get_logger(__name__)

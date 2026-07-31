@@ -20,7 +20,6 @@ Docker: docker compose up postgres
 from __future__ import annotations
 
 import json
-import os
 import sys
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -30,7 +29,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import streamlit as st
 from sqlalchemy import create_engine, text
 
@@ -184,7 +182,7 @@ with col_right:
 
     if escalated > 0:
         reasons = (
-            conversations[conversations["escalated"] == True]
+            conversations[conversations["escalated"]]
             ["escalation_reason"]
             .value_counts()
             .reset_index()
@@ -306,6 +304,6 @@ else:
 st.markdown("---")
 st.caption(
     "ResolveAI Analytics · "
-    f"Data from PostgreSQL · "
-    f"Updated on page refresh"
+    "Data from PostgreSQL · "
+    "Updated on page refresh"
 )
