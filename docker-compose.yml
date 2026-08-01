@@ -12,6 +12,43 @@
 #   docker compose ps             # check service status
 
 services:
+  # ── ResolveAI API ─────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: resolveai-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      chromadb:
+        condition: service_healthy
+      mock-crm:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Analytics Dashboard ───────────────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: resolveai-dashboard
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
   # ── ChromaDB — vector store for RAG knowledge base ───────────────────────────
   chromadb:

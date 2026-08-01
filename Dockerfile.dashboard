@@ -1,0 +1,29 @@
+# Dockerfile.dashboard
+#
+# Container for the Streamlit analytics dashboard.
+# Runs separately from the main API container.
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY pyproject.toml .
+
+# Install only what the dashboard needs
+RUN pip install --no-cache-dir streamlit plotly pandas sqlalchemy psycopg2-binary python-dotenv
+
+COPY src/analytics/ ./src/analytics/
+COPY src/db/ ./src/db/
+COPY src/config.py ./src/
+COPY src/__init__.py ./src/
+COPY src/logger.py ./src/
+
+EXPOSE 8501
+
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8501/_stcore/health || exit 1
+
+CMD ["streamlit", "run", "src/analytics/dashboard.py", \
+     "--server.port=8501", \
+     "--server.address=0.0.0.0", \
+     "--server.headless=true"]
