@@ -24,6 +24,9 @@ services:
       - .env
     environment:
       - DATABASE_URL=postgresql://resolveai:changeme-in-prod@postgres:5432/resolveai
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -107,6 +110,33 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+  
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: resolveai-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: resolveai-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
 
 # ── Named volumes ─────────────────────────────────────────────────────────────
 # Data persists across container restarts.
@@ -114,3 +144,5 @@ services:
 volumes:
   chroma_data:
   postgres_data:
+  prometheus_data:
+  grafana_data:

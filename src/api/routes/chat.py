@@ -30,6 +30,8 @@ from src.config import settings
 from src.db.models import get_db
 from src.logger import get_logger
 
+from src.metrics import REQUEST_COUNT, TURN_LATENCY, ESCALATION_COUNT
+
 log = get_logger(__name__)
 
 router = APIRouter()
@@ -155,6 +157,17 @@ async def chat_message(req: ChatRequest,
 
     # ── Run the agent turn ────────────────────────────────────────────────────
     result = await manager.handle_turn(req.message)
+    # Record metrics
+    REQUEST_COUNT.labels(
+        method="POST",
+        endpoint="/v1/chat/message",
+        status="escalated" if result.is_escalation else "resolved",
+    ).inc()
+
+    TURN_LATENCY.observe(result.latency_ms / 1000)
+
+    if result.is_escalation and result.escalation_reason:
+        ESCALATION_COUNT.labels(reason=result.escalation_reason).inc()
     # Log the turn to PostgreSQL
     conv_logger = ConversationLogger(db)
     await conv_logger.log_turn(

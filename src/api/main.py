@@ -25,9 +25,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import chat, voice
 from src.config import settings
 from src.logger import configure_logging, get_logger
+from src.metrics import REQUEST_COUNT, TURN_LATENCY, ESCALATION_COUNT
+from prometheus_client import make_asgi_app
 
 log = get_logger(__name__)
-
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 
@@ -126,3 +127,7 @@ app.include_router(
     prefix="/v1/voice",
     tags=["voice"],
 )
+
+# Prometheus metrics endpoint — scraped by Prometheus every 15s
+metrics_app = make_asgi_app()
+app.mount("/metrics", metrics_app)
