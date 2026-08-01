@@ -165,8 +165,6 @@ Running `python -m evaluation.eval_harness --prompt-version v2`:
 | Keyword match rate | baseline | 70.0% |
 
 ---
-
-## Project structure
 ## Project structure
 
 | Folder | Contents |
