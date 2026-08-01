@@ -176,7 +176,7 @@ Running `python -m evaluation.eval_harness --prompt-version v2`:
 | `src/db/` | SQLAlchemy models, PostgreSQL |
 | `src/mocks/` | Standalone mock Policy CRM service |
 | `evaluation/` | Eval harness, golden dataset (15 scenarios) |
-| `tests/` | Unit (37 tests), integration (16 tests) |
+| `tests/` | Unit (37), integration (16), conversation flows (8), regression (15 scenarios) |
 | `scripts/` | KB seeding, CRM seeding |
 | `monitoring/` | Prometheus + Grafana configs |
 | `.github/workflows/` | GitHub Actions CI pipeline |
@@ -187,16 +187,16 @@ Running `python -m evaluation.eval_harness --prompt-version v2`:
 
 ```bash
 # Full test suite
-pytest tests/unit/ tests/integration/ -v
+pytest tests/unit/ tests/integration/ tests/conversation_flows/ tests/regression/ -v
 
 # Unit tests only (fast, no external dependencies)
 pytest tests/unit/ -v
 
 # With coverage
-pytest tests/ --cov=src --cov-report=term-missing
+pytest tests/unit/ tests/integration/ tests/conversation_flows/ tests/regression/ --cov=src --cov-report=term-missing
 ```
 
-**69 tests, all passing.**
+**91 tests passing, 1 skipped.**
 
 ---
 
