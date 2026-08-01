@@ -23,31 +23,18 @@ Built with a focus on **production patterns**: prompt versioning, tool-calling, 
 ---
 
 ## Architecture
-┌─────────────────────────────────────────────────────┐
-│ Channels: Chat API · Twilio Voice │
-└─────────────────────┬───────────────────────────────┘
-│
-┌─────────────────────▼───────────────────────────────┐
-│ Agent Orchestration Core (FastAPI) │
-│ ┌─────────────────┐ ┌────────────────────────┐ │
-│ │ Conversation │ │ Tool Calling Layer │ │
-│ │ Manager + Memory│ │ (6 tools, async) │ │
-│ └────────┬────────┘ └────────────────────────┘ │
-│ ┌────────▼────────┐ ┌────────────────────────┐ │
-│ │ Guardrails │ │ Versioned Prompt │ │
-│ │ PII·Scope·Inject│ │ Registry (v1/v2) │ │
-│ └─────────────────┘ └────────────────────────┘ │
-└──────┬──────────────────────────┬───────────────────┘
-│ Integration Layer │ Data Layer
-┌────▼────┐ ┌────────┐ ┌──────┐ ┌──────────┐ ┌────┐
-│Zendesk │ │Policy │ │Slack │ │ChromaDB │ │PG │
-│(real) │ │CRM mock│ │Cal. │ │KB vectors│ │DB │
-└─────────┘ └────────┘ └──────┘ └──────────┘ └────┘
-│
-┌─────────────▼──────────────┐
-│ Streamlit Dashboard │
-│ Prometheus + Grafana │
-└────────────────────────────┘
+
+**Five layers, each with a clear responsibility:**
+
+**Channel layer** — Chat API and Twilio Voice both feed into the same backend agent loop.
+
+**Orchestration core** — Conversation manager (sliding-window memory + case state), tool calling layer (6 async tools), guardrails (PII, injection, scope), and versioned prompt registry (v1/v2).
+
+**Integration layer** — Zendesk (real), Google Calendar (real), Slack (real), Mock Policy CRM (Guidewire-style REST API).
+
+**Data layer** — ChromaDB for knowledge base vectors, PostgreSQL for conversation logs and analytics.
+
+**Observability** — Streamlit analytics dashboard, Prometheus metrics, structured JSON logging.
 ---
 
 ## Tech stack
@@ -180,20 +167,21 @@ Running `python -m evaluation.eval_harness --prompt-version v2`:
 ---
 
 ## Project structure
-resolveai/
-├── src/
-│ ├── agent/ # Core: ReAct loop, memory, guardrails, tools, prompts
-│ ├── voice/ # STT (Whisper), TTS (ElevenLabs), SSML builder
-│ ├── api/ # FastAPI app: chat routes, voice/Twilio webhooks
-│ ├── analytics/ # Conversation logger, Streamlit dashboard
-│ ├── db/ # SQLAlchemy models, PostgreSQL
-│ └── mocks/ # Standalone mock Policy CRM service
-├── evaluation/ # Eval harness, golden + adversarial datasets
-├── tests/ # Unit (37), integration (16), conversation flows
-├── scripts/ # KB seeding, CRM seeding
-├── monitoring/ # Prometheus + Grafana configs
-├── docs/ # Architecture, API, prompts, developer guide
-└── .github/workflows/ # CI pipeline
+## Project structure
+
+| Folder | Contents |
+|---|---|
+| `src/agent/` | ReAct loop, memory, guardrails, 6 tools, prompt registry |
+| `src/voice/` | Whisper STT, ElevenLabs TTS, SSML builder |
+| `src/api/` | FastAPI app, chat routes, Twilio voice webhooks |
+| `src/analytics/` | Conversation logger, Streamlit dashboard |
+| `src/db/` | SQLAlchemy models, PostgreSQL |
+| `src/mocks/` | Standalone mock Policy CRM service |
+| `evaluation/` | Eval harness, golden dataset (15 scenarios) |
+| `tests/` | Unit (37 tests), integration (16 tests) |
+| `scripts/` | KB seeding, CRM seeding |
+| `monitoring/` | Prometheus + Grafana configs |
+| `.github/workflows/` | GitHub Actions CI pipeline |
 
 ---
 
