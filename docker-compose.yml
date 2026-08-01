@@ -22,6 +22,8 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://resolveai:changeme-in-prod@postgres:5432/resolveai
     depends_on:
       postgres:
         condition: service_healthy
@@ -46,6 +48,8 @@ services:
       - "8501:8501"
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://resolveai:changeme-in-prod@postgres:5432/resolveai
     depends_on:
       - postgres
     restart: unless-stopped

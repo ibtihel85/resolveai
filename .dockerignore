@@ -1,0 +1,38 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Development files
+.env
+.git/
+.github/
+*.md
+tests/
+evaluation/
+monitoring/
+docs/
+
+# Local data
+chroma_data/
+*.db
+*.sqlite3
+*.log
+
+# IDE
+.vscode/
+.idea/

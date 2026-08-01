@@ -10,7 +10,7 @@ WORKDIR /app
 COPY pyproject.toml .
 
 # Install only what the dashboard needs
-RUN pip install --no-cache-dir streamlit plotly pandas sqlalchemy psycopg2-binary python-dotenv
+RUN pip install --no-cache-dir streamlit plotly pandas sqlalchemy psycopg2-binary python-dotenv pydantic-settings structlog
 
 COPY src/analytics/ ./src/analytics/
 COPY src/db/ ./src/db/
